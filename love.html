@@ -150,7 +150,7 @@ function render(){
       `现在是：${n.Y}.${pad(n.M)}.${pad(n.D)} ${pad(n.h)}:${pad(n.min)}:${pad(n.s)}`;
 
     document.getElementById('startline').textContent=
-      `一见那个钟情： ${S.Y}-${pad(S.M)}-${pad(S.D)} ${pad(S.h)}:${pad(S.min)}:${pad(S.s)} · 时区：${TZ}`;
+      `一见那个钟情： ${S.Y}.${pad(S.M)}.${pad(S.D)} ${pad(S.h)}:${pad(S.min)}:${pad(S.s)}`;
 
     const panel=document.getElementById('panel'); panel.innerHTML='';
     if(mode==='year'){
@@ -186,3 +186,4 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
