@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+<link rel="preload" as="image" href="assets/default-bg.jpg">
+
 <link rel="apple-touch-icon" href="icons/iconmeet180.png">
 <meta name="apple-mobile-web-app-title" content="还要多久我才能在你身边">
 
@@ -77,15 +79,29 @@
   <div id="toast" class="toast">背景已设置 ✓</div>
 
 <script>
+const BG_KEY  = 'shared_bg_v1';           // 你现在两页共用的 key
+const DB_NAME = 'his_site_store';
+const DEFAULT_BG = 'assets/default-bg.jpg';   // ← 默认背景路径（相对当前页）
+ 
 /* ===== 共享背景（与 index.html 相同） ===== */
 const BG_KEY='shared_bg_v1'; const DB_NAME='his_site_store';
-const bg=document.getElementById('bg'); const toast=document.getElementById('toast');
+const bg = document.getElementById('bg');
+bg.src = DEFAULT_BG;   // 先用默认图占位，等会儿有存储再覆盖
+ const toast=document.getElementById('toast');
 function tip(s){toast.textContent=s;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1200);}
 function openDB(){return new Promise((ok,err)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>err(r.error);});}
 async function idbGet(k){try{const db=await openDB();return await new Promise((res,rej)=>{const t=db.transaction('kv','readonly');const g=t.objectStore('kv').get(k);g.onsuccess=()=>{res(g.result);db.close();};g.onerror=()=>{rej(g.error);db.close();};});}catch(e){return null;}}
 async function idbSet(k,blob){const db=await openDB();await new Promise((res,rej)=>{const t=db.transaction('kv','readwrite');const p=t.objectStore('kv').put(blob,k);p.onsuccess=()=>{res();db.close();};p.onerror=()=>{rej(p.error);db.close();};});}
 async function idbDel(k){try{const db=await openDB();await new Promise((res,rej)=>{const t=db.transaction('kv','readwrite');const d=t.objectStore('kv').delete(k);d.onsuccess=()=>{res();db.close();};d.onerror=()=>{rej(d.error);db.close();};});}catch(e){}}
-(async()=>{try{const b=await idbGet(BG_KEY);if(b&&b.size){bg.src=URL.createObjectURL(b);return;}}catch(e){}const ls=localStorage.getItem(BG_KEY);if(ls) bg.src=ls;})();
+(async ()=>{
+  try {
+    const blob = await idbGet(BG_KEY);
+    if (blob && blob.size) { bg.src = URL.createObjectURL(blob); return; }
+  } catch(e) {}
+  const ls = localStorage.getItem(BG_KEY);
+  if (ls) bg.src = ls;
+  // 如果两处都没有，保持 DEFAULT_BG（上面已经设过）
+})();
 
 document.getElementById('btnImport').addEventListener('click',()=>file.click());
 const file=document.getElementById('file');
@@ -102,7 +118,12 @@ file.addEventListener('change',async()=>{
   }catch(e){ try{localStorage.setItem(BG_KEY,objURL);tip('已设置，但未持久保存');}catch(_){tip('设置失败');} }
   file.value="";
 });
-document.getElementById('btnClear').addEventListener('click',async()=>{bg.removeAttribute('src');await idbDel(BG_KEY);try{localStorage.removeItem(BG_KEY);}catch(e){};tip('已清除背景');});
+document.getElementById('btnClear').addEventListener('click', async ()=>{
+  bg.src = DEFAULT_BG;             // 恢复默认图
+  await idbDel(BG_KEY);
+  try{ localStorage.removeItem(BG_KEY); }catch(e){}
+  tip && tip('已恢复默认背景');    // 如果有 toast 就提示一下
+});
 
 /* ===== 倒计时（最大单位：天） ===== */
 const TZ='Asia/Shanghai', TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
@@ -111,7 +132,7 @@ function nowInZoneParts(zone){const f=new Intl.DateTimeFormat('en-CA',{timeZone:
 function split(ms){if(ms<=0)return{d:0,h:0,m:0,s:0,done:true};let t=Math.floor(ms/1000);const d=Math.floor(t/86400);t%=86400;const h=Math.floor(t/3600);t%=3600;const m=Math.floor(t/60);t%=60;return{d,h,m,s:t,done:false};}
 function render(){const left=split(TARGET-Date.now());const z=nowInZoneParts(TZ);
   document.getElementById('nowline').textContent=`当前（${TZ}）：${z.Y}-${pad(z.M)}-${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
-  document.getElementById('targetline').textContent=`相见时间（Chengdu）：2025-12-21 09:00:00`;
+  document.getElementById('targetline').textContent=`我们在成都见面吧：2025-12-21 09:00:00`;
   const p=document.getElementById('panel');p.innerHTML='';const add=(n,l)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="num">${n}</div><div class="label">${l}</div>`;p.appendChild(c);};
   add(left.d,'天');add(left.h,'小时');add(left.m,'分钟');add(left.s,'秒');
   const summaryEl = document.getElementById('summary');
@@ -127,6 +148,7 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
 
 
