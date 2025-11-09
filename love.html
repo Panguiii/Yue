@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<link rel="apple-touch-icon" href="icons/iconlove180.png">
+<meta name="apple-mobile-web-app-title" content="一见那个钟情">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>一见那个钟情</title>
+
+<!-- 预加载默认背景，避免首帧空白 -->
+<link rel="preload" as="image" href="assets/default-bg3.jpg">
+
+<style>
+  :root{
+    --text:#fff; --muted:rgba(255,255,255,.88);
+    --glass:rgba(0,0,0,.12); --panel:rgba(0,0,0,.28);
+    --shadow:0 12px 28px rgba(0,0,0,.45); --radius:16px;
+    --dim:.10;
+    --fz-base:clamp(14px,1.6vw,18px);
+    --fz-h1:clamp(22px,2.4vw,34px);
+    --fz-num:clamp(36px,6vw,72px);
+  }
+  html,body{
+    margin:0;padding:0;background:#0b0f16;color:var(--text);
+    font:var(--fz-base)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* 背景 */
+  #bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;z-index:0}
+  .veil{position:fixed;inset:0;background:rgba(0,0,0,var(--dim));z-index:1;pointer-events:none}
+  .glow{position:fixed;inset:-25vh -25vw;filter:blur(70px) opacity(.75);z-index:2;pointer-events:none;
+    background:
+      radial-gradient(40% 40% at 20% 20%, rgba(255,154,162,.20), transparent 60%),
+      radial-gradient(45% 45% at 85% 25%, rgba(156,217,255,.20), transparent 60%),
+      radial-gradient(50% 50% at 18% 80%, rgba(168,230,207,.18), transparent 60%),
+      radial-gradient(55% 55% at 75% 85%, rgba(199,206,255,.18), transparent 60%);}
+
+  .wrap{position:relative;z-index:3;max-width:960px;margin:0 auto;padding:28px 22px 88px}
+  h1{margin:0 0 10px;font-size:var(--fz-h1);letter-spacing:.3px;text-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .sub{color:var(--muted);margin:6px 0 10px;text-shadow:0 2px 8px rgba(0,0,0,.30)}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+  .pill{position:relative;padding:8px 12px;border-radius:999px;background:var(--panel);
+        backdrop-filter:blur(6px);box-shadow:var(--shadow);font-weight:700;cursor:pointer}
+  .pill.sel{background:linear-gradient(135deg,rgba(155,209,255,.95),rgba(235,207,255,.95));color:#111}
+  .pill::before,.card::before{
+    content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;
+    background:conic-gradient(from 180deg,#ff9aa2,#ffdac1,#e2f0cb,#a8e6cf,#9cd9ff,#c7ceff,#ff9aa2);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;opacity:.75;pointer-events:none;
+  }
+
+  .panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+  .card{position:relative;background:var(--glass);backdrop-filter:blur(2px);
+        border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.5px;font-size:var(--fz-num);font-weight:900;margin-bottom:6px;text-shadow:0 1px 6px rgba(0,0,0,.25)}
+  .label{opacity:.95}
+  .summary{margin-top:14px;font-variant-numeric:tabular-nums;text-shadow:0 2px 8px rgba(0,0,0,.28)}
+
+  /* 右下角固定：相遇时刻 */
+  #startline{
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 4;
+    margin: 0 !important;
+    padding: 6px 10px;
+    background: rgba(0,0,0,.28);
+    backdrop-filter: blur(6px);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  @media (min-width:768px){
+    #startline{ font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <!-- 只使用默认背景 -->
+  <img id="bg" src="assets/default-bg3.jpg" alt="">
+  <div class="veil"></div>
+  <div class="glow"></div>
+
+  <div class="wrap">
+    <h1>一见那个钟情</h1>
+    <div id="nowline" class="sub"></div>
+
+    <div class="toolbar">
+      <div class="pill sel" data-mode="year">按年</div>
+      <div class="pill" data-mode="month">按月</div>
+      <div class="pill" data-mode="day">按天</div>
+    </div>
+
+    <div id="panel" class="panel"></div>
+    <div id="summary" class="summary"></div>
+    <div id="startline" class="sub"></div>
+  </div>
+
+<script>
+/* ===== 爱的计时（按年 / 按月 / 按天） ===== */
+const TZ='Asia/Shanghai';
+const START='2023-05-07T12:00:00';   // 相遇&爱上他的时刻（北京时间）
+
+function pad(n){return String(n).padStart(2,'0')}
+function isLeap(y){return (y%4===0 && (y%100!==0 || y%400===0))}
+function dim(y,m){return [31,isLeap(y)?29:28,31,30,31,30,31,31,30,31,30,31][m-1]}
+function parseDT(s){const r=String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);return {Y:+r[1],M:+r[2],D:+r[3],h:+r[4],min:+r[5],s:+(r[6]||0)}}
+const S=parseDT(START);
+
+function nowParts(zone){
+  const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  const ps=f.formatToParts(new Date()); const m={}; for(const p of ps) if(p.type!=='literal') m[p.type]=+p.value;
+  return {Y:m.year,M:m.month,D:m.day,h:m.hour,min:m.minute,s:m.second};
+}
+function diffYMDHMS(n,b){
+  let Y=n.Y-b.Y,M=n.M-b.M,D=n.D-b.D,h=n.h-b.h,m=n.min-b.min,s=n.s-b.s;
+  if(s<0){s+=60;m--;} if(m<0){m+=60;h--;} if(h<0){h+=24;D--;}
+  if(D<0){let pm=n.M-1,py=n.Y;if(pm===0){pm=12;py--;} D+=dim(py,pm); M--;}
+  if(M<0){M+=12;Y--;} return {Y,M,D,h,m,s};
+}
+function sumMonthDaysFrom(y,m,c){let t=0;for(let i=0;i<c;i++){t+=dim(y,m);m++;if(m===13){m=1;y++;}}return t}
+
+let mode='year';
+function addCard(p,num,label){
+  const c=document.createElement('div');
+  c.className='card';
+  c.innerHTML=`<div class="num">${num}</div><div class="label">${label}</div>`;
+  p.appendChild(c);
+}
+
+function render(){
+  const n=nowParts(TZ);
+  const d=diffYMDHMS(n,S);
+  const months=d.Y*12+d.M;
+  const days=sumMonthDaysFrom(S.Y,S.M,months)+d.D;
+
+  document.getElementById('nowline').textContent=
+    `现在是：${n.Y}.${pad(n.M)}.${pad(n.D)} ${pad(n.h)}:${pad(n.min)}:${pad(n.s)}`;
+
+  document.getElementById('startline').textContent=
+    `一见那个钟情： ${S.Y}-${pad(S.M)}-${pad(S.D)} ${pad(S.h)}:${pad(S.min)}:${pad(S.s)} · 时区：${TZ}`;
+
+  const panel=document.getElementById('panel'); panel.innerHTML='';
+  if(mode==='year'){
+    addCard(panel,d.Y,'年');addCard(panel,d.M,'月');addCard(panel,d.D,'天');
+    addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
+    document.getElementById('summary').textContent=
+      `我爱他已经 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+  }else if(mode==='month'){
+    addCard(panel,months,'月');addCard(panel,d.D,'天');addCard(panel,d.h,'小时');
+    addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
+    document.getElementById('summary').textContent=
+      `我爱他已经 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+  }else{
+    addCard(panel,days,'天');addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
+    document.getElementById('summary').textContent=
+      `我爱他已经 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+  }
+}
+
+document.querySelectorAll('.pill[data-mode]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.pill[data-mode]').forEach(p=>p.classList.remove('sel'));
+    el.classList.add('sel'); mode=el.getAttribute('data-mode'); render();
+  });
+});
+
+render(); setInterval(render,1000);
+</script>
+</body>
+</html>
