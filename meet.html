@@ -35,6 +35,12 @@
   .num{font-variant-numeric:tabular-nums;letter-spacing:.5px;font-size:var(--fz-num);font-weight:900;margin-bottom:6px;text-shadow:0 1px 6px rgba(0,0,0,.25)}
   .label{opacity:.95}
   .summary{margin-top:14px;font-variant-numeric:tabular-nums;text-shadow:0 2px 8px rgba(0,0,0,.28)}
+  /* 把 💞 染成蓝色（保持原形状） */
+.emoji-blue{
+  display:inline-block;
+  filter: hue-rotate(190deg) saturate(150%) brightness(1.05);
+  -webkit-filter: hue-rotate(190deg) saturate(150%) brightness(1.05);
+  transform: translateY(2px); /* 轻微对齐基线 */
   .fab-wrap{position:fixed;right:14px;bottom:14px;display:flex;flex-direction:column;gap:10px;z-index:4}
   .fab{position:relative;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.28);
        backdrop-filter:blur(6px);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.9}
@@ -103,8 +109,8 @@ function render(){const left=split(TARGET-Date.now());const z=nowInZoneParts(TZ)
   add(left.d,'天');add(left.h,'小时');add(left.m,'分钟');add(left.s,'秒');
   const summaryEl = document.getElementById('summary');
 if (left.done) {
-  summaryEl.textContent = '就是现在！到你身边啦 💞';
-  summaryEl.classList.add('done');    // ← 放大
+  summaryEl.innerHTML = '就是现在！到你身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
+  summaryEl.classList.add('done');
 } else {
   summaryEl.textContent = `还有 ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
   summaryEl.classList.remove('done'); // ← 恢复正常
@@ -114,6 +120,7 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
 
 
