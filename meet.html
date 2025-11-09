@@ -14,8 +14,11 @@
     --shadow:0 12px 28px rgba(0,0,0,.45); --radius:16px;
     --dim:.10; --fz-base:clamp(14px,1.6vw,18px); --fz-h1:clamp(22px,2.4vw,34px); --fz-num:clamp(36px,6vw,72px);
   }
-  html,body{margin:0;padding:0;background:#0b0f16;color:var(--text);
-    font:var(--fz-base)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  html,body{
+    margin:0;padding:0;background:#0b0f16;color:var(--text);
+    font:var(--fz-base)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif
+  }
+  /* 背景 */
   #bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;z-index:0}
   .veil{position:fixed;inset:0;background:rgba(0,0,0,var(--dim));z-index:1;pointer-events:none}
   .glow{position:fixed;inset:-25vh -25vw;filter:blur(70px) opacity(.75);z-index:2;pointer-events:none;
@@ -24,9 +27,27 @@
       radial-gradient(45% 45% at 85% 25%, rgba(156,217,255,.20), transparent 60%),
       radial-gradient(50% 50% at 18% 80%, rgba(168,230,207,.18), transparent 60%),
       radial-gradient(55% 55% at 75% 85%, rgba(199,206,255,.18), transparent 60%);}
-  .wrap{position:relative;z-index:3;max-width:1120px;margin:0 auto;padding:28px 22px 88px}
+
+  /* 布局：用 flex 控制顺序与上下分布 */
+  .wrap{
+    position:relative;z-index:3;max-width:1120px;margin:0 auto;
+    padding:28px 22px 18px;
+    min-height:100svh;            /* 让内容占满屏 */
+    display:flex;flex-direction:column;
+  }
   h1{margin:0 0 10px;font-size:var(--fz-h1);letter-spacing:.3px;text-shadow:0 2px 10px rgba(0,0,0,.35)}
+
+  /* 顺序：标题(0) → 回答(1) → 面板(2) → 见面文案(3) → 底部当前时间(99) */
+  #summary{order:1}
+  .panel   {order:2}
+  #targetline{order:3}
+  #nowline{order:99;margin-top:auto;padding:10px 0 6px}
+
   .sub{color:var(--muted);margin:6px 0 10px;text-shadow:0 2px 8px rgba(0,0,0,.30)}
+
+  /* 让“倒计时区块 + 见面文案”整体更靠下，接近视觉居中 */
+  .panel{margin-top:clamp(10px,10vh,120px)}
+
   .panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
   .card{position:relative;background:var(--glass);backdrop-filter:blur(2px);border-radius:var(--radius);padding:18px;text-align:center;box-shadow:var(--shadow)}
   .card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;
@@ -34,193 +55,120 @@
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.75;pointer-events:none}
   .num{font-variant-numeric:tabular-nums;letter-spacing:.5px;font-size:var(--fz-num);font-weight:900;margin-bottom:6px;text-shadow:0 1px 6px rgba(0,0,0,.25)}
   .label{opacity:.95}
+
+  /* 你之前的“回答”样式（蓝色光晕） */
   .summary{
-  margin-top:14px;
-  font-variant-numeric:tabular-nums;
-  text-shadow:0 2px 8px rgba(0,0,220,.28); /* 你自定义的蓝色光晕 */
-}
+    margin-top:8px;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 8px rgba(0,0,220,.28);
+    font-size: clamp(22px, 5.8vw, 64px);  /* 回答更像副标题 */
+    font-weight:900; line-height:1.18; letter-spacing:.3px;
+  }
 
-/* 把 💞 染成蓝色（保持原形状） */
-.emoji-blue{
-  display:inline-block;
-  filter: hue-rotate(235deg) saturate(180%) brightness(1.06);
-  -webkit-filter: hue-rotate(235deg) saturate(180%) brightness(1.06);
-  transform: translateY(2px); /* 轻微对齐基线 */
-}  /* ←←← 这个右花括号一定要有！ */
+  /* 💞 染成蓝色 */
+  .emoji-blue{
+    display:inline-block;
+    filter:hue-rotate(235deg) saturate(180%) brightness(1.06);
+    -webkit-filter:hue-rotate(235deg) saturate(180%) brightness(1.06);
+    transform:translateY(2px);
+  }
 
-/* 浮动按钮和提示（这些必须在 .emoji-blue 外面） */
-.fab-wrap{
-  position:fixed;right:14px;bottom:14px;
-  display:flex;flex-direction:column;gap:10px;z-index:4
-}
-.fab{
-  position:relative;width:40px;height:40px;border-radius:50%;
-  background:rgba(0,0,0,.28);backdrop-filter:blur(6px);
-  box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;
-  font-size:18px;opacity:.9
-}
-#file{display:none}
-.toast{
-  position:fixed;left:50%;bottom:90px;transform:translateX(-50%);
-  z-index:5;background:rgba(0,0,0,.6);color:#fff;padding:8px 12px;border-radius:999px;
-  font-size:13px;backdrop-filter:blur(6px);opacity:0;transition:opacity .25s
-}
-.toast.show{opacity:1}
+  /* 计时结束时（无动画，仅字号上限更大，保留你的需求） */
+  #summary.done{
+    font-size:clamp(28px,8vw,88px);
+  }
 
-/* 计时结束时更大（无动画） */
-#summary.done{
-  font-size: clamp(32px, 8vw, 88px);
-  font-weight: 900;
-  letter-spacing: .5px;
-  line-height: 1.15;
-}
-/* 只让“分/秒”两张卡更透明 */
-:root{
-  --glass-minute: rgba(0,0,0,.02); /* 分：越小越透明 */
-  --glass-second: rgba(0,0,0,.02); /* 秒：更透明一点 */
-}
+  /* 只让“分/秒”两张卡更透明 */
+  :root{
+    --glass-minute: rgba(0,0,0,.02);
+    --glass-second: rgba(0,0,0,.02);
+  }
+  .panel .card:nth-child(3){background:var(--glass-minute);backdrop-filter:blur(1.5px)}
+  .panel .card:nth-child(4){background:var(--glass-second);backdrop-filter:blur(1.2px)}
+  .panel .card:nth-child(3)::before{opacity:.55}
+  .panel .card:nth-child(4)::before{opacity:.45}
 
-.panel .card:nth-child(3){  /* 分 */
-  background: var(--glass-minute);
-  backdrop-filter: blur(1.5px);   /* 也可调小一点更通透 */
-}
-.panel .card:nth-child(4){  /* 秒 */
-  background: var(--glass-second);
-  backdrop-filter: blur(1.2px);
-}
-
-/* 边缘彩虹描边也淡一点（可选） */
-.panel .card:nth-child(3)::before{ opacity:.55; }
-.panel .card:nth-child(4)::before{ opacity:.45; }
-
-  /* 放大“我们在成都见面吧 …”这一行 */
-#targetline{
-  font-size: clamp(20px, 5vw, 44px);  /* 自适应：手机更大，桌面上限 44px */
-  font-weight: 900;
-  letter-spacing: .3px;
-  line-height: 1.2;
-  text-shadow: 0 2px 10px rgba(70,140,255,.35); /* 可选蓝色光晕，想要纯白可删 */
-  margin-top: 6px; /* 需要更贴近上一行可调小/为0 */
-}
-
+  /* 放大“我们在成都见面吧 …” */
+  #targetline{
+    font-size:clamp(20px,5vw,44px);
+    font-weight:900;
+    letter-spacing:.3px;
+    line-height:1.2;
+    text-shadow:0 2px 10px rgba(70,140,255,.35);
+    margin-top:12px;
+  }
 </style>
 </head>
 <body>
-  <img id="bg" alt="">
+  <!-- 只用默认背景 -->
+  <img id="bg" src="assets/default-bg.jpg" alt="">
   <div class="veil"></div>
   <div class="glow"></div>
 
   <div class="wrap">
     <h1>还要多久我才能在你身边</h1>
-    <div id="nowline" class="sub"></div>
-    <div id="panel" class="panel"></div>
+    <!-- 回答（移动到标题下方） -->
     <div id="summary" class="summary"></div>
-    <div id="targetline" class="sub"></div>
-  </div>
 
-  <div class="fab-wrap">
-    <div class="fab" id="btnImport" title="导入背景">🖼️</div>
-    <div class="fab" id="btnClear"  title="清除背景">⌫</div>
+    <!-- 倒计时卡片 -->
+    <div id="panel" class="panel"></div>
+
+    <!-- 见面文案 -->
+    <div id="targetline" class="sub"></div>
+
+    <!-- 当前时间（放最底部） -->
+    <div id="nowline" class="sub"></div>
   </div>
-  <input id="file" type="file" accept="image/*">
-  <div id="toast" class="toast">背景已设置 ✓</div>
 
 <script>
-/* ===== 背景配置（只声明一次） ===== */
-const BG_KEY  = 'shared_bg_v1';
-const DB_NAME = 'his_site_store';
-const DEFAULT_BG = 'assets/default-bg.jpg';
-
-/* 先把默认背景挂上（即使 JS 其他地方报错，首屏也有图） */
-const bg = document.getElementById('bg');
-bg.src = DEFAULT_BG;
-
-const toast = document.getElementById('toast');
-function tip(s){
-  if(!toast) return;
-  toast.textContent = s;
-  toast.classList.add('show');
-  setTimeout(()=>toast.classList.remove('show'),1200);
-}
-
-/* IndexedDB 辅助函数 …（保持你原来的）*/
-function openDB(){ /* 原样保持 */ }
-async function idbGet(k){ /* 原样保持 */ }
-async function idbSet(k,blob){ /* 原样保持 */ }
-async function idbDel(k){ /* 原样保持 */ }
-
-/* 初始化读取：IDB → localStorage → 默认图（已在上面设置） */
-(async ()=>{
-  try{
-    const b = await idbGet(BG_KEY);
-    if (b && b.size){ bg.src = URL.createObjectURL(b); return; }
-  }catch(e){}
-  const ls = localStorage.getItem(BG_KEY);
-  if (ls) bg.src = ls;
-})();
-
-
-document.getElementById('btnImport').addEventListener('click',()=>file.click());
-const file=document.getElementById('file');
-file.addEventListener('change',async()=>{
-  const f=file.files&&file.files[0]; if(!f) return;
-  const objURL=URL.createObjectURL(f); bg.src=objURL; // 立即显示（即使是 HEIC）
-  try{
-    const bmp=await createImageBitmap(f).catch(()=>null);
-    let blob=f;
-    if(bmp){const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;c.getContext('2d').drawImage(bmp,0,0);blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));}
-    await idbSet(BG_KEY, blob);
-    try{const fr=new FileReader();fr.onload=()=>{try{localStorage.setItem(BG_KEY,fr.result);}catch(e){}};fr.readAsDataURL(blob);}catch(e){}
-    tip('背景已保存 ✓');
-  }catch(e){ try{localStorage.setItem(BG_KEY,objURL);tip('已设置，但未持久保存');}catch(_){tip('设置失败');} }
-  file.value="";
-});
-document.getElementById('btnClear').addEventListener('click', async ()=>{
-  bg.src = DEFAULT_BG;             // 恢复默认图
-  await idbDel(BG_KEY);
-  try{ localStorage.removeItem(BG_KEY); }catch(e){}
-  tip && tip('已恢复默认背景');    // 如果有 toast 就提示一下
-});
-
 /* ===== 倒计时（最大单位：天） ===== */
-const TZ='Asia/Shanghai', TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
+const TZ='Asia/Shanghai';
+const TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
+
 function pad(n){return String(n).padStart(2,'0')}
-function nowInZoneParts(zone){const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});const ps=f.formatToParts(new Date());const m={};for(const p of ps)if(p.type!=='literal')m[p.type]=+p.value;return{Y:m.year,M:m.month,D:m.day,h:m.hour,min:m.minute,s:m.second};}
-function split(ms){if(ms<=0)return{d:0,h:0,m:0,s:0,done:true};let t=Math.floor(ms/1000);const d=Math.floor(t/86400);t%=86400;const h=Math.floor(t/3600);t%=3600;const m=Math.floor(t/60);t%=60;return{d,h,m,s:t,done:false};}
-function render(){const left=split(TARGET-Date.now());const z=nowInZoneParts(TZ);
-  document.getElementById('nowline').textContent=`当前成都时间：${z.Y}-${pad(z.M)}-${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
-  document.getElementById('targetline').textContent=`我们在成都见面吧：就在21号晚上~`;
-  const p=document.getElementById('panel');p.innerHTML='';const add=(n,l)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="num">${n}</div><div class="label">${l}</div>`;p.appendChild(c);};
-  add(left.d,'天');add(left.h,'小时');add(left.m,'分钟');add(left.s,'秒');
-  const summaryEl = document.getElementById('summary');
-if (left.done) {
-  summaryEl.innerHTML = '就是现在！到你身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
-  summaryEl.classList.add('done');
-} else {
-  summaryEl.textContent = `还要 ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
-  summaryEl.classList.remove('done'); // ← 恢复正常
+function nowInZoneParts(zone){
+  const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  const ps=f.formatToParts(new Date());const m={};
+  for(const p of ps) if(p.type!=='literal') m[p.type]=+p.value;
+  return{Y:m.year,M:m.month,D:m.day,h:m.hour,min:m.minute,s:m.second};
 }
+function split(ms){
+  if(ms<=0)return{d:0,h:0,m:0,s:0,done:true};
+  let t=Math.floor(ms/1000);
+  const d=Math.floor(t/86400); t%=86400;
+  const h=Math.floor(t/3600);  t%=3600;
+  const m=Math.floor(t/60);    t%=60;
+  return{d,h,m,s:t,done:false};
 }
+
+function render(){
+  const left=split(TARGET-Date.now());
+  const z=nowInZoneParts(TZ);
+
+  // 标题下方的“回答”
+  const summaryEl=document.getElementById('summary');
+  if(left.done){
+    summaryEl.innerHTML='就是现在！到你身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
+    summaryEl.classList.add('done');
+  }else{
+    summaryEl.textContent=`还有 ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
+    summaryEl.classList.remove('done');
+  }
+
+  // 倒计时卡片
+  const p=document.getElementById('panel'); p.innerHTML='';
+  const add=(n,l)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="num">${n}</div><div class="label">${l}</div>`;p.appendChild(c);};
+  add(left.d,'天'); add(left.h,'小时'); add(left.m,'分钟'); add(left.s,'秒');
+
+  // 见面文案
+  document.getElementById('targetline').textContent='我们在成都见面吧：就在21号晚上~';
+
+  // 当前时间（页面底部）
+  document.getElementById('nowline').textContent=
+    `当前成都时间：${z.Y}-${pad(z.M)}-${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
+}
+
 render(); setInterval(render,1000);
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
