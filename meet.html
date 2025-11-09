@@ -98,7 +98,7 @@ function nowInZoneParts(zone){const f=new Intl.DateTimeFormat('en-CA',{timeZone:
 function split(ms){if(ms<=0)return{d:0,h:0,m:0,s:0,done:true};let t=Math.floor(ms/1000);const d=Math.floor(t/86400);t%=86400;const h=Math.floor(t/3600);t%=3600;const m=Math.floor(t/60);t%=60;return{d,h,m,s:t,done:false};}
 function render(){const left=split(TARGET-Date.now());const z=nowInZoneParts(TZ);
   document.getElementById('nowline').textContent=`当前（${TZ}）：${z.Y}-${pad(z.M)}-${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
-  document.getElementById('targetline').textContent=`相见时间（${TZ}）：2025-12-21 09:00:00`;
+  document.getElementById('targetline').textContent=`相见时间（${TZ}）：2025-11-10 02:04:00`;
   const p=document.getElementById('panel');p.innerHTML='';const add=(n,l)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="num">${n}</div><div class="label">${l}</div>`;p.appendChild(c);};
   add(left.d,'天');add(left.h,'小时');add(left.m,'分钟');add(left.s,'秒');
   document.getElementById('summary').textContent=left.done?'就是现在！到你身边啦 💞':`还有 ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
@@ -107,4 +107,5 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
