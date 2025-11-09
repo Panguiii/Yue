@@ -140,6 +140,19 @@ margin-top<!doctype html>
   letter-spacing: .3px;
   margin-top: 4px;               /* 两行之间的间距 */
 }
+/* 让 “标题 + 回答(#summary)” 这块整体更靠下 */
+:root{
+  /* 主页到内容的下移量：手机用视口高度的 12%，桌面最多 180px */
+  --hero-offset: clamp(24px, 12vh, 180px);
+}
+
+/* 如果你已经按我之前的建议把标题换成两行并加了这个类名，用它： */
+.title-2lines{
+  margin-top: var(--hero-offset) !important;
+}
+
+/* 如果你的标题还是普通 <h1>，就用这一条（择一保留即可）： */
+/* h1{ margin-top: var(--hero-offset) !important; } */
 
 </style>
 </head>
@@ -220,6 +233,7 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
 
 
