@@ -47,6 +47,13 @@
   #file{display:none}
   .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:5;background:rgba(0,0,0,.6);color:#fff;padding:8px 12px;border-radius:999px;font-size:13px;backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
   .toast.show{opacity:1}
+  /* 计时结束时更大（无动画） */
+#summary.done{
+  font-size: clamp(32px, 8vw, 88px);
+  font-weight: 900;
+  letter-spacing: .5px;
+  line-height: 1.15;
+}
 </style>
 </head>
 <body>
@@ -120,6 +127,7 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
 
 
