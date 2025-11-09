@@ -74,6 +74,24 @@
   letter-spacing: .5px;
   line-height: 1.15;
 }
+/* 只让“分/秒”两张卡更透明 */
+:root{
+  --glass-minute: rgba(0,0,0,.02); /* 分：越小越透明 */
+  --glass-second: rgba(0,0,0,.02); /* 秒：更透明一点 */
+}
+
+.panel .card:nth-child(3){  /* 分 */
+  background: var(--glass-minute);
+  backdrop-filter: blur(1.5px);   /* 也可调小一点更通透 */
+}
+.panel .card:nth-child(4){  /* 秒 */
+  background: var(--glass-second);
+  backdrop-filter: blur(1.2px);
+}
+
+/* 边缘彩虹描边也淡一点（可选） */
+.panel .card:nth-child(3)::before{ opacity:.55; }
+.panel .card:nth-child(4)::before{ opacity:.45; }
 
 </style>
 </head>
@@ -177,6 +195,7 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
 
 
