@@ -3,12 +3,10 @@
 <head>
 <link rel="apple-touch-icon" href="icons/iconlove180.png">
 <meta name="apple-mobile-web-app-title" content="一见那个钟情">
-
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>一见那个钟情</title>
 
-<!-- 预加载默认背景，避免首帧空白 -->
 <link rel="preload" as="image" href="assets/default-bg3.jpg">
 
 <style>
@@ -24,7 +22,6 @@
   html,body{
     margin:0;padding:0;background:#0b0f16;color:var(--text);
     font:var(--fz-base)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    -webkit-font-smoothing:antialiased;
   }
   /* 背景 */
   #bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;z-index:0}
@@ -80,7 +77,6 @@
 </style>
 </head>
 <body>
-  <!-- 只使用默认背景 -->
   <img id="bg" src="assets/default-bg3.jpg" alt="">
   <div class="veil"></div>
   <div class="glow"></div>
@@ -101,21 +97,32 @@
   </div>
 
 <script>
-/* ===== 爱的计时（按年 / 按月 / 按天） ===== */
 const TZ='Asia/Shanghai';
-const START='2023-05-07T12:00:00';   // 相遇&爱上他的时刻（北京时间）
+const START='2023-05-07T12:00:00';   // 相遇时刻（北京时间）
 
 function pad(n){return String(n).padStart(2,'0')}
 function isLeap(y){return (y%4===0 && (y%100!==0 || y%400===0))}
 function dim(y,m){return [31,isLeap(y)?29:28,31,30,31,30,31,31,30,31,30,31][m-1]}
-function parseDT(s){const r=String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);return {Y:+r[1],M:+r[2],D:+r[3],h:+r[4],min:+r[5],s:+(r[6]||0)}}
+function parseDT(s){
+  const r=String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  return {Y:+r[1],M:+r[2],D:+r[3],h:+r[4],min:+r[5],s:+(r[6]||0)};
+}
 const S=parseDT(START);
 
+/* ✅ 兼容型获取某时区当前时间：不依赖 formatToParts */
 function nowParts(zone){
-  const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  const ps=f.formatToParts(new Date()); const m={}; for(const p of ps) if(p.type!=='literal') m[p.type]=+p.value;
-  return {Y:m.year,M:m.month,D:m.day,h:m.hour,min:m.minute,s:m.second};
+  // sv-SE 会返回：YYYY-MM-DD HH:mm:ss
+  const s=new Intl.DateTimeFormat('sv-SE',{
+    timeZone:zone, hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit'
+  }).format(new Date());
+  const [d,t]=s.split(' ');                // '2025-11-09 22:35:51'
+  const [Y,M,D]=d.split('-').map(Number);
+  const [h,min,ss]=t.split(':').map(Number);
+  return {Y,M,D,h,min,s:ss};
 }
+
 function diffYMDHMS(n,b){
   let Y=n.Y-b.Y,M=n.M-b.M,D=n.D-b.D,h=n.h-b.h,m=n.min-b.min,s=n.s-b.s;
   if(s<0){s+=60;m--;} if(m<0){m+=60;h--;} if(h<0){h+=24;D--;}
@@ -133,32 +140,38 @@ function addCard(p,num,label){
 }
 
 function render(){
-  const n=nowParts(TZ);
-  const d=diffYMDHMS(n,S);
-  const months=d.Y*12+d.M;
-  const days=sumMonthDaysFrom(S.Y,S.M,months)+d.D;
+  try{
+    const n=nowParts(TZ);
+    const d=diffYMDHMS(n,S);
+    const months=d.Y*12+d.M;
+    const days=sumMonthDaysFrom(S.Y,S.M,months)+d.D;
 
-  document.getElementById('nowline').textContent=
-    `现在是：${n.Y}.${pad(n.M)}.${pad(n.D)} ${pad(n.h)}:${pad(n.min)}:${pad(n.s)}`;
+    document.getElementById('nowline').textContent=
+      `现在是：${n.Y}.${pad(n.M)}.${pad(n.D)} ${pad(n.h)}:${pad(n.min)}:${pad(n.s)}`;
 
-  document.getElementById('startline').textContent=
-    `一见那个钟情： ${S.Y}-${pad(S.M)}-${pad(S.D)} ${pad(S.h)}:${pad(S.min)}:${pad(S.s)} · 时区：${TZ}`;
+    document.getElementById('startline').textContent=
+      `一见那个钟情： ${S.Y}-${pad(S.M)}-${pad(S.D)} ${pad(S.h)}:${pad(S.min)}:${pad(S.s)} · 时区：${TZ}`;
 
-  const panel=document.getElementById('panel'); panel.innerHTML='';
-  if(mode==='year'){
-    addCard(panel,d.Y,'年');addCard(panel,d.M,'月');addCard(panel,d.D,'天');
-    addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
-    document.getElementById('summary').textContent=
-      `我爱他已经 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
-  }else if(mode==='month'){
-    addCard(panel,months,'月');addCard(panel,d.D,'天');addCard(panel,d.h,'小时');
-    addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
-    document.getElementById('summary').textContent=
-      `我爱他已经 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
-  }else{
-    addCard(panel,days,'天');addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
-    document.getElementById('summary').textContent=
-      `我爱他已经 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+    const panel=document.getElementById('panel'); panel.innerHTML='';
+    if(mode==='year'){
+      addCard(panel,d.Y,'年');addCard(panel,d.M,'月');addCard(panel,d.D,'天');
+      addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
+      document.getElementById('summary').textContent=
+        `我爱他已经 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+    }else if(mode==='month'){
+      addCard(panel,months,'月');addCard(panel,d.D,'天');addCard(panel,d.h,'小时');
+      addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
+      document.getElementById('summary').textContent=
+        `我爱他已经 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+    }else{
+      addCard(panel,days,'天');addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
+      document.getElementById('summary').textContent=
+        `我爱他已经 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+    }
+  }catch(e){
+    // 即便出错也让页面有内容
+    document.getElementById('summary').textContent='(兼容模式：时间计算异常，已简化显示)';
+    console.error(e);
   }
 }
 
