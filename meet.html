@@ -54,7 +54,6 @@
   .num{font-variant-numeric:tabular-nums;letter-spacing:.5px;font-size:var(--fz-num);font-weight:900;margin-bottom:6px;text-shadow:0 1px 6px rgba(0,0,0,.25)}
   .label{opacity:.95}
 
-  /* 回答样式（蓝色光晕） */
   .summary{
     margin-top:8px;font-variant-numeric:tabular-nums;
     text-shadow:0 2px 8px rgba(0,0,220,.28);
@@ -66,26 +65,21 @@
   }
   #summary.done{ font-size:clamp(28px,8vw,88px); }
 
-  /* 四张卡更透明 */
   .panel .card:nth-child(-n+4){ background:rgba(0,0,0,.02); backdrop-filter:blur(1.2px) }
   .panel .card:nth-child(-n+4)::before{ opacity:.45 }
 
-  /* 见面文案 */
   #targetline{
     font-size:clamp(20px,5vw,42px); font-weight:900; letter-spacing:.3px; line-height:1.2;
     text-shadow:0 2px 10px rgba(70,140,255,.35); margin-top:clamp(32px,8vh,96px);
   }
 
-  /* 双行标题 */
   .title-2lines{ line-height:1.1; margin:0 0 12px; text-shadow:0 2px 10px rgba(0,0,0,.35); }
   .h1-line1{ display:block; font-size:clamp(18px,3.8vw,28px); font-weight:700; letter-spacing:.2px; opacity:.92; }
   .h1-line2{ display:block; font-size:var(--fz-h1); font-weight:900; letter-spacing:.3px; margin-top:6px; }
 
-  /* 标题+回答整体下移 */
   :root{ --hero-offset: clamp(32px, 6vh, 200px); }
   .title-2lines{ margin-top: var(--hero-offset) !important; }
 
-  /* 当前时间固定右下 */
   #nowline{
     position:fixed; right:12px; bottom:12px; z-index:4; order:initial !important;
     margin:0 !important; padding:6px 10px; background:rgba(0,0,0,.28);
@@ -94,51 +88,64 @@
   }
   @media (min-width:768px){ #nowline{ font-size:14px } }
 
-  /* 单行自适应：不换行，超宽由 JS 动态压字号 */
   .fit1{
     white-space: nowrap;
     overflow: hidden;
     text-overflow: clip;
-    display:block;
-    width:100%;
+    display:block; width:100%;
   }
 
-  /* —— 立冬→冬至 进度条（下移 + 不被裁剪 + 层级更高） —— */
+  /* —— 立冬→冬至 进度条（升级版） —— */
   .season-wrap{
     position: relative;
-    z-index: 5; /* 保证在上一块文案之上 */
-    margin-top: clamp(52px, 10vh, 180px); /* 整体向下挪动 */
+    z-index: 5;
+    margin-top: clamp(64px, 11vh, 200px); /* 下移，避免挡字 */
   }
   .season-bar{
     position:relative;height:18px;border-radius:999px;
-    /* 允许小狗溢出显示，不裁剪 */
-    overflow:visible;
-    background: var(--track, #ffffff1a); box-shadow: var(--shadow);
+    overflow:visible; /* 允许狗/终点溢出显示 */
+    background:#ffffff1a; box-shadow:var(--shadow);
   }
   .season-fill{
     position:absolute;inset:0 auto 0 0;width:0;
     background: linear-gradient(90deg,#9cd9ff,#c7ceff,#ff9aa2);
-    /* 用 clip-path 做圆角裁剪，替代 overflow:hidden 的效果 */
-    clip-path: inset(0 0 0 0 round 999px);
+    clip-path: inset(0 0 0 0 round 999px); /* 保留圆角裁剪 */
   }
+  /* 居中百分比（覆盖在条中间） */
+  .season-percent{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:13px; color:#fff;
+    text-shadow:0 2px 8px rgba(0,0,0,.45);
+    pointer-events:none; user-select:none;
+  }
+
   .season-dog{
     position:absolute;top:-26px;left:0;transform:translateX(-50%);
     width:44px;height:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45));
     animation:season-bounce .9s ease-in-out infinite;
-    z-index: 1; /* 保证盖住进度条本身 */
-    pointer-events:none;
+    z-index: 1; pointer-events:none;
   }
   @keyframes season-bounce{
     0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-6px) }
   }
+
+  /* 终点放大 1.4× */
   .season-end{
-    position:absolute;top:-26px;right:-6px;width:44px;height:auto;
+    position:absolute;top:-30px;right:-6px;width:62px;height:auto; /* 44px × 1.4 ≈ 61.6 */
     filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));
     pointer-events:none;
   }
+
   .season-ends{
     display:flex;justify-content:space-between;align-items:center;
     margin:8px 2px 0;color:var(--muted);font-size:.95em
+  }
+
+  /* 完成时的最终 GIF（居中放大） */
+  .season-final{
+    display:none; margin:18px auto 0; width:160px; height:auto;
+    filter:drop-shadow(0 12px 28px rgba(0,0,0,.45));
   }
 </style>
 </head>
@@ -160,17 +167,19 @@
 
     <div id="targetline" class="sub fit1"></div>
 
-    <!-- 立冬→冬至 · 季节进度（放在 targetline 正下方） -->
-    <section class="season-wrap">
+    <!-- 立冬→冬至 · 季节进度 -->
+    <section class="season-wrap" id="seasonWrap">
       <div class="season-bar" id="seasonBar">
         <div class="season-fill" id="seasonFill"></div>
+        <div class="season-percent" id="seasonPct">0%</div>
         <img class="season-dog" id="seasonDog" src="assets/laiicon.gif" alt="小狗向右奔跑">
-        <img class="season-end" src="assets/zongicon.gif" alt="终点等待">
+        <img class="season-end" id="seasonEnd" src="assets/zongicon.gif" alt="终点等待">
       </div>
-      <div class="season-ends">
-        <span>立冬，苏黎世</span>
-        <span>冬至，成都</span>
+      <div class="season-ends" id="seasonEnds">
+        <span>立冬</span>
+        <span>冬至</span>
       </div>
+      <img class="season-final" id="seasonFinal" src="assets/final.gif" alt="完成">
     </section>
 
     <div id="nowline" class="sub"></div>
@@ -210,7 +219,7 @@ window.addEventListener('orientationchange', applyFits);
 const TZ = 'Asia/Shanghai';
 let TARGET = new Date('2025-12-21T09:00:00+08:00').getTime();
 
-// 可选测试参数：?demo=soon / ?demo=done
+// ?demo=soon / ?demo=done 便于测试
 const q = new URLSearchParams(location.search);
 const demo = q.get('demo');
 if (demo === 'soon') TARGET = Date.now() + 2000;
@@ -239,17 +248,50 @@ function split(ms){
 /* —— 立冬→冬至 · 进度条（北京时间）—— */
 const LIDONG_START = new Date('2025-11-07T17:05:00+08:00').getTime();
 const DONGZHI_END  = new Date('2025-12-21T23:03:00+08:00').getTime();
+const _sWrap = document.getElementById('seasonWrap');
 const _sBar  = document.getElementById('seasonBar');
 const _sFill = document.getElementById('seasonFill');
 const _sDog  = document.getElementById('seasonDog');
-function _clamp01(x){ return x<0?0:x>1?1:x; }
+const _sEnd  = document.getElementById('seasonEnd');
+const _sPct  = document.getElementById('seasonPct');
+const _sEnds = document.getElementById('seasonEnds');
+const _sFinal= document.getElementById('seasonFinal');
+
+function clamp01(x){ return x<0?0:x>1?1:x; }
+
+/* 防重叠更新 */
 function updateSeason(){
-  if(!_sBar || !_sFill || !_sDog) return;
-  const span = DONGZHI_END - LIDONG_START;
-  let p = (Date.now() - LIDONG_START) / span;
-  p = _clamp01(p);
-  _sFill.style.width = (p*100).toFixed(6) + '%';
-  _sDog.style.left   = (p*100) + '%';
+  if(!_sBar || !_sFill || !_sDog || !_sEnd || !_sPct) return;
+
+  const span = Math.max(1, DONGZHI_END - LIDONG_START);
+  const rawP = clamp01((Date.now() - LIDONG_START) / span);
+
+  // 百分比显示（取 1 位小数）
+  const pct = Math.min(100, Math.max(0, rawP*100));
+  _sPct.textContent = pct.toFixed(1) + '%';
+
+  // 计算像素位置并防碰撞
+  const barW = _sBar.clientWidth;
+  const dogW = _sDog.offsetWidth || 44;
+  const endW = _sEnd.offsetWidth || 62;
+  const END_RIGHT_OFFSET = 6;     // .season-end 的 right:-6px
+  const SAFE_GAP = 8;             // 安全间距（可微调）
+
+  // 终点左边界（像素）
+  const endLeft = barW - endW - END_RIGHT_OFFSET;
+
+  // 狗中心允许的最右位置（终点左边界 - 安全距 - 狗半宽）
+  const maxDogCenter = Math.max(dogW/2, endLeft - SAFE_GAP - dogW/2);
+
+  // 狗中心目标位置（按进度）
+  let dogCenter = rawP * barW;
+  dogCenter = Math.min(Math.max(dogW/2, dogCenter), maxDogCenter);
+
+  // 设置填充宽度（百分比仍按真实 rawP 走到 100%，视觉更符合“时间进度”）
+  _sFill.style.width = (pct) + '%';
+
+  // 设置狗的位置（left 是中心点，配合 translateX(-50%)）
+  _sDog.style.left = (dogCenter / barW * 100) + '%';
 }
 window.addEventListener('resize', updateSeason);
 
@@ -264,11 +306,26 @@ function render(){
   if (left.done) {
     summaryEl.innerHTML = '就是现在！到他身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
     summaryEl.classList.add('done');
+
     if (targetEl) { targetEl.textContent = ''; targetEl.style.display = 'none'; }
+
+    /* 完成：隐藏进度条与两只 GIF，显示 final.gif */
+    if (_sBar)  _sBar.style.display = 'none';
+    if (_sEnds) _sEnds.style.display = 'none';
+    if (_sFinal) _sFinal.style.display = 'block';
+
   } else {
     summaryEl.textContent = `倒计时： ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
     summaryEl.classList.remove('done');
+
     if (targetEl) { targetEl.style.display = 'block'; targetEl.textContent = '我们在成都见面吧！'; }
+
+    // 运行进度条
+    updateSeason();
+
+    if (_sBar)  _sBar.style.display = 'block';
+    if (_sEnds) _sEnds.style.display = 'flex';
+    if (_sFinal) _sFinal.style.display = 'none';
   }
 
   // 倒计时卡片
@@ -280,9 +337,6 @@ function render(){
   // 右下角当前时间
   document.getElementById('nowline').textContent =
     `他的时间：${z.Y}.${pad(z.M)}.${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
-
-  // 季节进度条
-  updateSeason();
 
   // 单行自适应
   applyFits();
@@ -369,4 +423,3 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
-
