@@ -148,8 +148,13 @@ function fitOneLine(el, minPx, maxPx){
 function applyFits(){
   fitOneLine(document.querySelector('.h1-line2.fit1'), 18, 72);
   fitOneLine(document.getElementById('summary'),       16, 64);
-  fitOneLine(document.getElementById('targetline'),    14, 44);
+
+  const t = document.getElementById('targetline');
+  if (t && t.offsetWidth) {           // display:none 时 offsetWidth 为 0，自动跳过
+    fitOneLine(t, 14, 44);
+  }
 }
+
 window.addEventListener('resize', applyFits);
 window.addEventListener('orientationchange', applyFits);
 
@@ -185,23 +190,36 @@ function split(ms){
 }
 
 function render(){
-  const left=split(TARGET-Date.now());
-  const z=nowInZoneParts(TZ);
+  const left = split(TARGET - Date.now());
+  const z = nowInZoneParts(TZ);
 
-  const summaryEl=document.getElementById('summary');
-  if(left.done){
-    summaryEl.innerHTML='就是现在！到你身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
+  const summaryEl = document.getElementById('summary');
+  const targetEl  = document.getElementById('targetline');
+
+  if (left.done) {
+    summaryEl.innerHTML = '就是现在！到你身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
     summaryEl.classList.add('done');
-  }else{
-    summaryEl.textContent=`倒计时： ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
+
+    // ✅ 到点后隐藏“我们在成都见面吧…”
+    if (targetEl) {
+      targetEl.textContent = '';
+      targetEl.style.display = 'none';
+    }
+  } else {
+    summaryEl.textContent = `倒计时： ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
     summaryEl.classList.remove('done');
+
+    // ✅ 未到点时恢复显示与文案
+    if (targetEl) {
+      targetEl.style.display = 'block';
+      targetEl.textContent = '我们在成都见面吧！就在21号晚上~';
+    }
   }
 
-  const p=document.getElementById('panel'); p.innerHTML='';
-  const add=(n,l)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="num">${n}</div><div class="label">${l}</div>`;p.appendChild(c);};
-  add(left.d,'天'); add(left.h,'小时'); add(left.m,'分钟'); add(left.s,'秒');
+  // …下面保持你的原逻辑：面板、nowline、applyFits()
+  // （略）
+}
 
-  document.getElementById('targetline').textContent='我们在成都见面吧！就在21号晚上~';
 
   document.getElementById('nowline').textContent=
     `他的时间：${z.Y}.${pad(z.M)}.${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
@@ -289,3 +307,4 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
+
