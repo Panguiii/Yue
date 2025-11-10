@@ -103,20 +103,30 @@
     width:100%;
   }
 
-  /* —— 立冬→冬至 进度条 —— */
-  .season-wrap{ margin-top:14px }
+  /* —— 立冬→冬至 进度条（下移 + 不被裁剪 + 层级更高） —— */
+  .season-wrap{
+    position: relative;
+    z-index: 5; /* 保证在上一块文案之上 */
+    margin-top: clamp(52px, 10vh, 180px); /* 整体向下挪动 */
+  }
   .season-bar{
-    position:relative;height:18px;border-radius:999px;overflow:hidden;
+    position:relative;height:18px;border-radius:999px;
+    /* 允许小狗溢出显示，不裁剪 */
+    overflow:visible;
     background: var(--track, #ffffff1a); box-shadow: var(--shadow);
   }
   .season-fill{
     position:absolute;inset:0 auto 0 0;width:0;
     background: linear-gradient(90deg,#9cd9ff,#c7ceff,#ff9aa2);
+    /* 用 clip-path 做圆角裁剪，替代 overflow:hidden 的效果 */
+    clip-path: inset(0 0 0 0 round 999px);
   }
   .season-dog{
     position:absolute;top:-26px;left:0;transform:translateX(-50%);
     width:44px;height:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45));
     animation:season-bounce .9s ease-in-out infinite;
+    z-index: 1; /* 保证盖住进度条本身 */
+    pointer-events:none;
   }
   @keyframes season-bounce{
     0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-6px) }
@@ -124,10 +134,11 @@
   .season-end{
     position:absolute;top:-26px;right:-6px;width:44px;height:auto;
     filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));
+    pointer-events:none;
   }
   .season-ends{
     display:flex;justify-content:space-between;align-items:center;
-    margin:6px 2px 0;color:var(--muted);font-size:.95em
+    margin:8px 2px 0;color:var(--muted);font-size:.95em
   }
 </style>
 </head>
@@ -190,9 +201,7 @@ function applyFits(){
   fitOneLine(document.querySelector('.h1-line2.fit1'), 18, 72);
   fitOneLine(document.getElementById('summary'),       16, 64);
   const t = document.getElementById('targetline');
-  if (t && t.offsetParent !== null) { // display:none 时跳过
-    fitOneLine(t, 14, 44);
-  }
+  if (t && t.offsetParent !== null) { fitOneLine(t, 14, 44); }
 }
 window.addEventListener('resize', applyFits);
 window.addEventListener('orientationchange', applyFits);
@@ -360,4 +369,3 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
-
