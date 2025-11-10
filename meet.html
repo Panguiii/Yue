@@ -160,7 +160,13 @@ window.addEventListener('orientationchange', applyFits);
 
 /* ===== 倒计时（最大单位：天） ===== */
 const TZ='Asia/Shanghai';
-const TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
+let TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
+let TARGET = new Date('2025-12-21T09:00:00+08:00').getTime();
+
+const q = new URLSearchParams(location.search);
+if (q.get('demo') === 'soon') TARGET = Date.now() + 2000; // 2 秒后到
+if (q.get('demo') === 'done') TARGET = Date.now() - 1;    // 立即完成
+  
 function pad(n){return String(n).padStart(2,'0')}
 function nowInZoneParts(zone){
   const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
@@ -289,5 +295,6 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
+
 
 
