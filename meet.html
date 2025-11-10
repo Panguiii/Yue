@@ -159,16 +159,30 @@ window.addEventListener('resize', applyFits);
 window.addEventListener('orientationchange', applyFits);
 
 /* ===== 倒计时（最大单位：天） ===== */
-let TZ='Asia/Shanghai';
-const TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
+const TZ = 'Asia/Shanghai';
+
+// 正式目标时间（先定义一次）
 let TARGET = new Date('2025-12-21T09:00:00+08:00').getTime();
 
+// 可选的测试参数：?demo=soon 或 ?demo=done
 const q = new URLSearchParams(location.search);
-if (q.get('demo') === 'soon') TARGET = Date.now() + 2000; // 2 秒后到
-if (q.get('demo') === 'done') TARGET = Date.now() - 1;    // 立即完成
-  
-function pad(n){return String(n).padStart(2,'0')}
+const demo = q.get('demo');
+if (demo === 'soon') TARGET = Date.now() + 2000; // 2 秒后到
+else if (demo === 'done') TARGET = Date.now() - 1; // 立刻完成
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
 function nowInZoneParts(zone){
+  const f = new Intl.DateTimeFormat('en-CA', {
+    timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+  });
+  const ps = f.formatToParts(new Date());
+  const m = {};
+  for (const p of ps) if (p.type !== 'literal') m[p.type] = +p.value;
+  return { Y:m.year, M:m.month, D:m.day, h:m.hour, min:m.minute, s:m.second };
+}
+
   const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
   const ps=f.formatToParts(new Date());const m={};
   for(const p of ps) if(p.type!=='literal') m[p.type]=+p.value;
@@ -295,6 +309,7 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
+
 
 
 
