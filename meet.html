@@ -98,8 +98,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: clip;
-    display:block;     /* 确保有可测量宽度（标题里的 span 需要） */
-    width:100%;        /* 保证按容器宽度来对齐 */
+    display:block;
+    width:100%;
   }
 </style>
 </head>
@@ -112,20 +112,15 @@
   <div class="wrap">
     <h1 class="title-2lines">
       <span class="h1-line1">那么</span>
-      <!-- 标题主行做单行自适应 -->
       <span class="h1-line2 fit1">还要多久我才能在他身边</span>
     </h1>
 
-    <!-- 回答（在标题下方，做单行自适应） -->
     <div id="summary" class="summary fit1"></div>
 
-    <!-- 倒计时卡片 -->
     <div id="panel" class="panel"></div>
 
-    <!-- 见面文案（单行自适应） -->
     <div id="targetline" class="sub fit1"></div>
 
-    <!-- 当前时间（右下角固定） -->
     <div id="nowline" class="sub"></div>
   </div>
 
@@ -135,12 +130,12 @@
   </audio>
 
 <script>
-/* ===== 单行自适应字号（二分查找，快且稳） ===== */
+/* ===== 单行自适应字号 ===== */
 function fitOneLine(el, minPx, maxPx){
   if(!el) return;
   el.style.fontSize = maxPx + 'px';
   el.style.lineHeight = '1.15';
-  if (el.scrollWidth <= el.clientWidth) return; // 已经一行
+  if (el.scrollWidth <= el.clientWidth) return;
   let lo=minPx, hi=maxPx, mid;
   for(let i=0;i<12 && lo<=hi;i++){
     mid = (lo+hi)>>1;
@@ -160,18 +155,15 @@ window.addEventListener('orientationchange', applyFits);
 
 /* ===== 倒计时（最大单位：天） ===== */
 const TZ = 'Asia/Shanghai';
-
-// 正式目标时间（先定义一次）
 let TARGET = new Date('2025-12-21T09:00:00+08:00').getTime();
 
-// 可选的测试参数：?demo=soon 或 ?demo=done
+// 可选测试参数：?demo=soon / ?demo=done
 const q = new URLSearchParams(location.search);
 const demo = q.get('demo');
-if (demo === 'soon') TARGET = Date.now() + 2000; // 2 秒后到
-else if (demo === 'done') TARGET = Date.now() - 1; // 立刻完成
+if (demo === 'soon') TARGET = Date.now() + 2000;
+else if (demo === 'done') TARGET = Date.now() - 1;
 
 function pad(n){ return String(n).padStart(2,'0'); }
-
 function nowInZoneParts(zone){
   const f = new Intl.DateTimeFormat('en-CA', {
     timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit',
@@ -183,11 +175,6 @@ function nowInZoneParts(zone){
   return { Y:m.year, M:m.month, D:m.day, h:m.hour, min:m.minute, s:m.second };
 }
 
-  const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  const ps=f.formatToParts(new Date());const m={};
-  for(const p of ps) if(p.type!=='literal') m[p.type]=+p.value;
-  return{Y:m.year,M:m.month,D:m.day,h:m.hour,min:m.minute,s:m.second};
-}
 function split(ms){
   if(ms<=0)return{d:0,h:0,m:0,s:0,done:true};
   let t=Math.floor(ms/1000);
@@ -196,11 +183,11 @@ function split(ms){
   const m=Math.floor(t/60);    t%=60;
   return{d,h,m,s:t,done:false};
 }
+
 function render(){
   const left=split(TARGET-Date.now());
   const z=nowInZoneParts(TZ);
 
-  // 标题下方的“回答”
   const summaryEl=document.getElementById('summary');
   if(left.done){
     summaryEl.innerHTML='就是现在！到你身边啦 <span class="emoji-blue" role="img" aria-label="revolving hearts">💞</span>';
@@ -210,19 +197,15 @@ function render(){
     summaryEl.classList.remove('done');
   }
 
-  // 倒计时卡片
   const p=document.getElementById('panel'); p.innerHTML='';
   const add=(n,l)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="num">${n}</div><div class="label">${l}</div>`;p.appendChild(c);};
   add(left.d,'天'); add(left.h,'小时'); add(left.m,'分钟'); add(left.s,'秒');
 
-  // 见面文案
   document.getElementById('targetline').textContent='我们在成都见面吧！就在21号晚上~';
 
-  // 当前时间（页面底部）
   document.getElementById('nowline').textContent=
     `他的时间：${z.Y}.${pad(z.M)}.${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
 
-  // 每次渲染后做一次单行自适应
   applyFits();
 }
 render(); setInterval(render,1000);
@@ -235,7 +218,7 @@ window.addEventListener('DOMContentLoaded', applyFits);
 
   const FADE_IN_MS  = 1600;
   const FADE_OUT_MS = 800;
-  const TARGET_VOL  = 0.35;
+  const TARGET_VOL  = 0.35;  // 你已调小
   const START_MARGIN = 5;
   let started = false;
 
@@ -258,8 +241,7 @@ window.addEventListener('DOMContentLoaded', applyFits);
     });
   }
 
-  // 预热：静音自动播放（被允许的平台会缓冲更好）
-  (async()=>{ try{ await bgm.play(); }catch(e){} })();
+  (async()=>{ try{ await bgm.play(); }catch(e){} })(); // 静音预热
 
   async function startFromRandom(){
     if (started) return;
@@ -281,7 +263,6 @@ window.addEventListener('DOMContentLoaded', applyFits);
     started = false;
   }
 
-  // 解锁触发：微信桥 + 通用手势（一次即可）
   const offs=[]; const on=(el,ev,fn,opt)=>{ el.addEventListener(ev,fn,opt); offs.push(()=>el.removeEventListener(ev,fn,opt)); };
   const offAll=()=>offs.splice(0).forEach(fn=>fn());
   const unlock=async()=>{ offAll(); await startFromRandom(); };
@@ -293,7 +274,6 @@ window.addEventListener('DOMContentLoaded', applyFits);
   document.addEventListener('click', unlock, {once:true});
   document.addEventListener('keydown', unlock, {once:true});
 
-  // 切后台/回来：淡出暂停；回来淡入继续（不重新随机）
   document.addEventListener('visibilitychange', async ()=>{
     if (document.hidden){
       if (!bgm.paused) await pauseWithFade();
@@ -309,8 +289,3 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
-
-
-
-
-
