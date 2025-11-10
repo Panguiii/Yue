@@ -173,6 +173,23 @@ margin-top<!doctype html>
 @media (min-width:768px){
   #nowline{ font-size: 14px; }
 }
+  /* BGM 开关（右下角，带淡化/发光） */
+.bgm-btn{
+  position: fixed; right: 12px; bottom: 68px; z-index: 6; /* 避开右下角时间卡片 */
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.28); backdrop-filter: blur(6px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  color:#fff; font-size:18px; user-select:none; cursor:pointer;
+  opacity:.72; transition: opacity .25s ease, transform .18s ease, box-shadow .25s ease;
+}
+.bgm-btn:hover{ opacity:1; transform: translateY(-1px); }
+.bgm-btn.on{
+  opacity:1;
+  box-shadow: 0 10px 26px rgba(0,0,0,.45), 0 0 18px rgba(90,160,255,.35);
+}
+@media (min-width:768px){ .bgm-btn{ bottom: 82px; } }
+
 </style>
 </head>
 <body>
@@ -249,9 +266,107 @@ function render(){
 }
 
 render(); setInterval(render,1000);
+  // === 背景音乐：随机起点 + 淡入淡出 ===
+(function(){
+  const bgm = document.getElementById('bgm');
+  const btn = document.getElementById('bgmBtn');
+  if(!bgm || !btn) return;
+
+  const LS_KEY = 'bgm_on';
+  const FADE_IN_MS  = 1600;   // 淡入时长
+  const FADE_OUT_MS = 800;    // 淡出时长
+  const TARGET_VOL  = 0.65;   // 目标音量（0~1）
+  const START_MARGIN = 5;      // 随机起点时，距离尾部至少 5s，避免马上循环
+
+  // 工具：等待元数据、淡入淡出
+  function waitMeta(){
+    return new Promise(res=>{
+      if (isFinite(bgm.duration) && bgm.duration>0) return res();
+      bgm.addEventListener('loadedmetadata', res, {once:true});
+    });
+  }
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+  async function fadeTo(target, ms){
+    const start = bgm.volume;
+    const steps = Math.max(1, Math.round(ms/16));
+    for(let i=1;i<=steps;i++){
+      bgm.volume = +(start + (target-start)*i/steps).toFixed(3);
+      await sleep(ms/steps);
+    }
+    bgm.volume = target;
+  }
+
+  // 每次进入页面时，选择一个随机起点
+  async function startFromRandom(){
+    await waitMeta();
+    const dur = isFinite(bgm.duration) ? bgm.duration : 0;
+    const max = Math.max(0, dur - START_MARGIN);
+    const t   = (max>0) ? Math.random()*max : 0;
+    try{ bgm.currentTime = t; }catch(e){}
+    bgm.volume = 0;
+    await bgm.play().catch(()=>{});     // iOS 需手势触发
+    await fadeTo(TARGET_VOL, FADE_IN_MS);
+    btn.classList.add('on');
+    btn.textContent = '♫';
+    localStorage.setItem(LS_KEY,'1');
+  }
+
+  async function pauseWithFade(){
+    await fadeTo(0, FADE_OUT_MS);
+    bgm.pause();
+    btn.classList.remove('on');
+    btn.textContent = '♪';
+    localStorage.setItem(LS_KEY,'0');
+  }
+
+  // 点击按钮手动开/关
+  btn.addEventListener('click', async ()=>{
+    if (bgm.paused){
+      await startFromRandom();   // 打开：随机起点 + 淡入
+    }else{
+      await pauseWithFade();     // 关闭：淡出
+    }
+  });
+
+  // 记忆上次状态：若为“开”，等待一次手势后自动播放（随机起点）
+  if (localStorage.getItem(LS_KEY)==='1'){
+    const unlock = async ()=>{ await startFromRandom(); document.removeEventListener('pointerdown', unlock); };
+    document.addEventListener('pointerdown', unlock, {once:true});
+  }else{
+    // 初始显示为关闭态
+    btn.classList.remove('on');
+    btn.textContent = '♪';
+  }
+
+  // 页面切后台/回来：淡出暂停；回到前台如果记忆为开，再淡入继续（不再随机）
+  document.addEventListener('visibilitychange', async ()=>{
+    if (document.hidden){
+      if (!bgm.paused) await pauseWithFade();
+    }else{
+      if (localStorage.getItem(LS_KEY)==='1'){
+        // 回前台：从当前进度继续淡入（不重新随机）
+        bgm.volume = 0;
+        await bgm.play().catch(()=>{});
+        await fadeTo(TARGET_VOL, FADE_IN_MS);
+        btn.classList.add('on'); btn.textContent='♫';
+      }
+    }
+  });
+})();
+
 </script>
+  
+  <!-- 背景音乐开关按钮 -->
+<div class="bgm-btn" id="bgmBtn" aria-label="音乐开关" title="音乐开关">♪</div>
+
+<!-- 音频元素（只有 MP3 也可以；路径/大小写需与文件一致） -->
+<audio id="bgm" preload="auto" loop>
+  <source src="assets/longdistance.mp3" type="audio/mpeg">
+</audio>
+
 </body>
 </html>
+
 
 
 
