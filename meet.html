@@ -423,6 +423,29 @@ window.addEventListener('DOMContentLoaded', applyFits);
 </script>
 </body>
 </html>
+/* 让进度条整体再靠上一些：数值越小越靠上 */
+:root{
+  --season-offset: clamp(24px, 6vh, 120px);  /* 之前你写的是 64px/11vh/200px */
+}
+.season-wrap{
+  margin-top: var(--season-offset);
+}
+
+/* 图层分级：条在下，文字居中，两个 GIF 在最上面 */
+.season-bar{ position: relative; z-index: 1; }
+.season-fill{ z-index: 0; }
+.season-percent{ z-index: 1; }
+.season-dog, .season-end{ z-index: 2; }   /* 关键：把右侧 GIF 提到条上方 */
+
+/* 右侧终点 GIF 放到条上方并保持 1.4× 放大 */
+.season-end{
+  top: -26px;         /* 和小狗同一高度骑在条上 */
+  right: -6px;
+  width: 62px;        /* 44px × 1.4 */
+  height: auto;
+  pointer-events: none;
+}
+
 
 
 
