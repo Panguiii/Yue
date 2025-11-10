@@ -3,10 +3,10 @@
 <head>
 <link rel="apple-touch-icon" href="icons/iconmeet180.png">
 <meta name="apple-mobile-web-app-title" content="还要多久我才能在你身边">
-
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>还要多久我才能在你身边</title>
+
 <style>
   :root{
     --text:#fff; --muted:rgba(255,255,255,.88);
@@ -29,7 +29,7 @@
       radial-gradient(50% 50% at 18% 80%, rgba(168,230,207,.18), transparent 60%),
       radial-gradient(55% 55% at 75% 85%, rgba(199,206,255,.18), transparent 60%);}
 
-  /* 布局：用 flex 控制顺序与上下分布 */
+  /* 布局 */
   .wrap{
     position:relative;z-index:3;max-width:1120px;margin:0 auto;
     padding:28px 22px 18px; min-height:100svh; display:flex;flex-direction:column;
@@ -43,8 +43,6 @@
   #nowline{order:99;margin-top:20px;padding:10px 16px 8px}
 
   .sub{color:var(--muted);margin:6px 0 10px;text-shadow:0 2px 8px rgba(0,0,0,.30)}
-
-  /* 让“倒计时区块 + 见面文案”整体更靠下 */
   .panel{margin-top:clamp(24px,4vh,120px)}
 
   .panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
@@ -71,7 +69,7 @@
   .panel .card:nth-child(-n+4){ background:rgba(0,0,0,.02); backdrop-filter:blur(1.2px) }
   .panel .card:nth-child(-n+4)::before{ opacity:.45 }
 
-  /* 放大“我们在成都见面吧 …” */
+  /* 见面文案 */
   #targetline{
     font-size:clamp(20px,5vw,42px); font-weight:900; letter-spacing:.3px; line-height:1.2;
     text-shadow:0 2px 10px rgba(70,140,255,.35); margin-top:clamp(32px,8vh,96px);
@@ -94,13 +92,15 @@
     color:var(--muted); font-size:13px; line-height:1.3;
   }
   @media (min-width:768px){ #nowline{ font-size:14px } }
-  /* 单行自适应：不换行，超宽先让 JS 调整字号 */
-.fit1{
-  white-space: nowrap;
-  overflow: hidden;       /* 不要省略，避免测量抖动 */
-  text-overflow: clip;    /* 不用省略号，JS 会把字号调小到刚好一行 */
-}
 
+  /* 单行自适应：不换行，超宽由 JS 动态压字号 */
+  .fit1{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    display:block;     /* 确保有可测量宽度（标题里的 span 需要） */
+    width:100%;        /* 保证按容器宽度来对齐 */
+  }
 </style>
 </head>
 <body>
@@ -112,20 +112,18 @@
   <div class="wrap">
     <h1 class="title-2lines">
       <span class="h1-line1">那么</span>
-      <span class="h1-line2">还要多久我才能在你身边</span>
+      <!-- 标题主行做单行自适应 -->
       <span class="h1-line2 fit1">还要多久我才能在你身边</span>
     </h1>
 
-    <!-- 回答（在标题下方） -->
-    <div id="summary" class="summary"></div>
-<div id="summary" class="summary fit1"></div>
+    <!-- 回答（在标题下方，做单行自适应） -->
+    <div id="summary" class="summary fit1"></div>
 
     <!-- 倒计时卡片 -->
     <div id="panel" class="panel"></div>
 
-    <!-- 见面文案 -->
-    <div id="targetline" class="sub"></div>
-<div id="targetline" class="sub fit1"></div>
+    <!-- 见面文案（单行自适应） -->
+    <div id="targetline" class="sub fit1"></div>
 
     <!-- 当前时间（右下角固定） -->
     <div id="nowline" class="sub"></div>
@@ -137,10 +135,32 @@
   </audio>
 
 <script>
+/* ===== 单行自适应字号（二分查找，快且稳） ===== */
+function fitOneLine(el, minPx, maxPx){
+  if(!el) return;
+  el.style.fontSize = maxPx + 'px';
+  el.style.lineHeight = '1.15';
+  if (el.scrollWidth <= el.clientWidth) return; // 已经一行
+  let lo=minPx, hi=maxPx, mid;
+  for(let i=0;i<12 && lo<=hi;i++){
+    mid = (lo+hi)>>1;
+    el.style.fontSize = mid + 'px';
+    if (el.scrollWidth <= el.clientWidth) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  el.style.fontSize = Math.max(minPx, hi) + 'px';
+}
+function applyFits(){
+  fitOneLine(document.querySelector('.h1-line2.fit1'), 18, 72);
+  fitOneLine(document.getElementById('summary'),       16, 64);
+  fitOneLine(document.getElementById('targetline'),    14, 44);
+}
+window.addEventListener('resize', applyFits);
+window.addEventListener('orientationchange', applyFits);
+
 /* ===== 倒计时（最大单位：天） ===== */
 const TZ='Asia/Shanghai';
 const TARGET=new Date('2025-12-21T09:00:00+08:00').getTime();
-
 function pad(n){return String(n).padStart(2,'0')}
 function nowInZoneParts(zone){
   const f=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
@@ -159,11 +179,6 @@ function split(ms){
 function render(){
   const left=split(TARGET-Date.now());
   const z=nowInZoneParts(TZ);
-function render(){
-  /* 你原来的渲染逻辑 ... */
-
-  applyFits(); // ← 每次更新后自适应到单行
-}
 
   // 标题下方的“回答”
   const summaryEl=document.getElementById('summary');
@@ -174,37 +189,6 @@ function render(){
     summaryEl.textContent=`倒计时： ${left.d} 天 ${left.h} 小时 ${left.m} 分钟 ${left.s} 秒`;
     summaryEl.classList.remove('done');
   }
-// --- 单行自适应字号（二分查找，快且稳）---
-function fitOneLine(el, minPx, maxPx){
-  if(!el) return;
-  // 先用最大值试一下
-  el.style.fontSize = maxPx + 'px';
-  el.style.lineHeight = '1.15'; // 保持紧凑（按需可调）
-  // 容器宽度用元素自身的 clientWidth（父级宽度已由布局控制）
-  // 用二分把字号压到“刚好不溢出”
-  let lo = minPx, hi = maxPx, mid;
-  // 如果本来就不超，直接返回
-  if (el.scrollWidth <= el.clientWidth) return;
-  for(let i=0; i<12 && lo <= hi; i++){
-    mid = Math.floor((lo + hi) / 2);
-    el.style.fontSize = mid + 'px';
-    if (el.scrollWidth <= el.clientWidth) lo = mid + 1;
-    else hi = mid - 1;
-  }
-  el.style.fontSize = Math.max(minPx, hi) + 'px';
-}
-
-// 对三处文字分别给出“可读的最小/最大字号”范围
-function applyFits(){
-  fitOneLine(document.querySelector('.h1-line2.fit1'), 18, 72); // 标题主行
-  fitOneLine(document.getElementById('summary'),               16, 64); // 倒计时行
-  fitOneLine(document.getElementById('targetline'),            14, 44); // 见面行
-}
-
-// 页面加载、窗口尺寸变化都执行一次
-window.addEventListener('DOMContentLoaded', applyFits);
-window.addEventListener('resize', applyFits);
-window.addEventListener('orientationchange', applyFits);
 
   // 倒计时卡片
   const p=document.getElementById('panel'); p.innerHTML='';
@@ -217,10 +201,14 @@ window.addEventListener('orientationchange', applyFits);
   // 当前时间（页面底部）
   document.getElementById('nowline').textContent=
     `他的时间：${z.Y}.${pad(z.M)}.${pad(z.D)} ${pad(z.h)}:${pad(z.min)}:${pad(z.s)}`;
+
+  // 每次渲染后做一次单行自适应
+  applyFits();
 }
 render(); setInterval(render,1000);
+window.addEventListener('DOMContentLoaded', applyFits);
 
-/* ===== BGM：尽量自动 + 一触即播（含微信）===== */
+/* ===== BGM：尽量自动 + 一触即播（含微信） ===== */
 (function(){
   const bgm = document.getElementById('bgm');
   if(!bgm) return;
@@ -228,7 +216,7 @@ render(); setInterval(render,1000);
   const FADE_IN_MS  = 1600;
   const FADE_OUT_MS = 800;
   const TARGET_VOL  = 0.65;
-  const START_MARGIN = 5; // 随机起点距尾部至少 5s
+  const START_MARGIN = 5;
   let started = false;
 
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
@@ -246,7 +234,7 @@ render(); setInterval(render,1000);
       let done=false;
       const on=()=>{ if(!done){done=true; bgm.removeEventListener('loadedmetadata',on); resolve();}};
       bgm.addEventListener('loadedmetadata', on, {once:true});
-      setTimeout(on, ms); // 兜底
+      setTimeout(on, ms);
     });
   }
 
@@ -262,7 +250,7 @@ render(); setInterval(render,1000);
     try{ bgm.currentTime = t; }catch(e){}
     try{ bgm.muted = false; }catch(e){}
     bgm.volume = 0;
-    await bgm.play().catch(()=>{});  // 需要手势的平台，这里会在解锁时放行
+    await bgm.play().catch(()=>{});
     await fadeTo(TARGET_VOL, FADE_IN_MS);
     started = true;
   }
@@ -273,20 +261,19 @@ render(); setInterval(render,1000);
     started = false;
   }
 
-  // 解锁触发（一次即可）：微信桥 + 通用手势
-  const offs=[];
-  const on=(el,ev,fn,opt)=>{ el.addEventListener(ev,fn,opt); offs.push(()=>el.removeEventListener(ev,fn,opt)); };
+  // 解锁触发：微信桥 + 通用手势（一次即可）
+  const offs=[]; const on=(el,ev,fn,opt)=>{ el.addEventListener(ev,fn,opt); offs.push(()=>el.removeEventListener(ev,fn,opt)); };
   const offAll=()=>offs.splice(0).forEach(fn=>fn());
   const unlock=async()=>{ offAll(); await startFromRandom(); };
 
-  on(document,'WeixinJSBridgeReady', unlock, {once:true});
+  document.addEventListener('WeixinJSBridgeReady', unlock, {once:true});
   if (window.wx && typeof wx.ready==='function'){ try{ wx.ready(unlock); }catch(e){} }
-  on(document,'pointerdown', unlock, {once:true});
-  on(document,'touchstart', unlock, {once:true});
-  on(document,'click', unlock, {once:true});
-  on(document,'keydown', unlock, {once:true});
+  document.addEventListener('pointerdown', unlock, {once:true});
+  document.addEventListener('touchstart', unlock, {once:true});
+  document.addEventListener('click', unlock, {once:true});
+  document.addEventListener('keydown', unlock, {once:true});
 
-  // 页面切后台/回来：淡出暂停；回来淡入继续（不重新随机）
+  // 切后台/回来：淡出暂停；回来淡入继续（不重新随机）
   document.addEventListener('visibilitychange', async ()=>{
     if (document.hidden){
       if (!bgm.paused) await pauseWithFade();
@@ -302,8 +289,3 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
-
-
-
-
-
