@@ -216,6 +216,13 @@ margin-top<!doctype html>
     <!-- 当前时间（放最底部） -->
     <div id="nowline" class="sub"></div>
   </div>
+<!-- 背景音乐开关按钮（放在 <script> 之前） -->
+<div class="bgm-btn" id="bgmBtn" aria-label="音乐开关" title="音乐开关">♪</div>
+
+<!-- 注意大小写与文件一致：longdistance.mp3 -->
+<audio id="bgm" preload="auto" loop>
+  <source src="assets/longdistance.MP3" type="audio/mpeg">
+</audio>
 
 <script>
 /* ===== 倒计时（最大单位：天） ===== */
@@ -356,16 +363,9 @@ render(); setInterval(render,1000);
 
 </script>
   
-  <!-- 背景音乐开关按钮 -->
-<div class="bgm-btn" id="bgmBtn" aria-label="音乐开关" title="音乐开关">♪</div>
-
-<!-- 音频元素（只有 MP3 也可以；路径/大小写需与文件一致） -->
-<audio id="bgm" preload="auto" loop>
-  <source src="assets/longdistance.mp3" type="audio/mpeg">
-</audio>
-
-</body>
+  </body>
 </html>
+
 
 
 
