@@ -157,16 +157,16 @@ function render(){
       addCard(panel,d.Y,'年');addCard(panel,d.M,'月');addCard(panel,d.D,'天');
       addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
       document.getElementById('summary').textContent=
-        `我爱他已经 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+        `爱他已经 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
     }else if(mode==='month'){
       addCard(panel,months,'月');addCard(panel,d.D,'天');addCard(panel,d.h,'小时');
       addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
       document.getElementById('summary').textContent=
-        `我爱他已经 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+        `爱他已经 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
     }else{
       addCard(panel,days,'天');addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
       document.getElementById('summary').textContent=
-        `我爱他已经 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒啦`;
+        `爱他已经 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
     }
   }catch(e){
     // 即便出错也让页面有内容
@@ -186,6 +186,7 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
 
 
 
