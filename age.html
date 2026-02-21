@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
 <link rel="apple-touch-icon" href="icons/iconsage180.png">
-<meta name="apple-mobile-web-app-title" content="当他老了">
+<meta name="apple-mobile-web-app-title" content="有些人永远可爱">
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>当他老了</title>
+<title>有些人永远可爱</title>
 
 <link rel="preload" as="image" href="assets/default-bg2.jpg">
 
@@ -135,7 +135,7 @@ function render(){
   const months=d.Y*12+d.M; const days=sumMonthDaysFrom(B.Y,B.M,months)+d.D;
 
   document.getElementById('nowline').textContent=
-    `现在是：${n.Y}.${pad(n.M)}.${pad(n.D)} ${pad(n.h)}:${pad(n.min)}:${pad(n.s)}`;
+    `现在的时间是：${n.Y}.${pad(n.M)}.${pad(n.D)} ${pad(n.h)}:${pad(n.min)}:${pad(n.s)}`;
 
   document.getElementById('birthline').textContent=
     `爱在黎明破晓前： ${B.Y}-${pad(B.M)}-${pad(B.D)} ${pad(B.h)}:${pad(B.min)}:${pad(B.s)}`;
@@ -145,16 +145,16 @@ function render(){
     addCard(panel,d.Y,'年');addCard(panel,d.M,'月');addCard(panel,d.D,'天');
     addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
     document.getElementById('summary').textContent=
-      `他已经 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒大咯`;
+      `他在这个世界 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
   }else if(mode==='month'){
     addCard(panel,months,'月');addCard(panel,d.D,'天');addCard(panel,d.h,'小时');
     addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
     document.getElementById('summary').textContent=
-      `他已经 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒大咯`;
+      `他在这个世界 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
   }else{
     addCard(panel,days,'天');addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
     document.getElementById('summary').textContent=
-      `他已经 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒大咯`;
+      `他在这个世界 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
   }
 }
 
@@ -169,3 +169,4 @@ render(); setInterval(render,1000);
 </script>
 </body>
 </html>
+
