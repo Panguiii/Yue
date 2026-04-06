@@ -98,7 +98,7 @@
 
 <script>
 const TZ='Asia/Shanghai';
-const START='2023-05-07T12:00:00';   // 相遇时刻（北京时间）
+const START='2026-02-28T18:00:00';   // 相爱时刻（北京时间）
 
 function pad(n){return String(n).padStart(2,'0')}
 function isLeap(y){return (y%4===0 && (y%100!==0 || y%400===0))}
@@ -157,16 +157,16 @@ function render(){
       addCard(panel,d.Y,'年');addCard(panel,d.M,'月');addCard(panel,d.D,'天');
       addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
       document.getElementById('summary').textContent=
-        `爱他 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
+        `和他在一起 ${d.Y} 年 ${d.M} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
     }else if(mode==='month'){
       addCard(panel,months,'月');addCard(panel,d.D,'天');addCard(panel,d.h,'小时');
       addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
       document.getElementById('summary').textContent=
-        `爱他 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
+        `和他在一起 ${months} 个月 ${d.D} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
     }else{
       addCard(panel,days,'天');addCard(panel,d.h,'小时');addCard(panel,d.m,'分钟');addCard(panel,d.s,'秒');
       document.getElementById('summary').textContent=
-        `爱他 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
+        `和他在一起 ${days} 天 ${d.h} 小时 ${d.m} 分 ${d.s} 秒`;
     }
   }catch(e){
     // 即便出错也让页面有内容
